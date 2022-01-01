@@ -1,2 +1,3 @@
 # BrickBlocker
-A python game implementing Pygame graphics
+- A game coded in python that uses pygame graphics
+- Applications of basic python dataypes and additional imported libraries
