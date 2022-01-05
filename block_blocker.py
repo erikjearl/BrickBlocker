@@ -20,6 +20,7 @@ NUM_SPAWN = 0
 SPAWN_TIMER = 1100 #ms between spawns
 GAME_OVER = False
 
+#hitbox
 GRAY_HIT = pygame.USEREVENT + 1
 ORANGE_HIT = pygame.USEREVENT + 2
 PINK_HIT = pygame.USEREVENT + 3
@@ -80,7 +81,7 @@ def draw_bg(ending):
     if GAME_OVER:
         WIN.blit(ending,(50,175))
     
-
+#draw and handle game objects
 def draw_window(blocker,gray,orange,pink,bricks,upnext,gray_health,orange_health,pink_health,blocker_health):
     if gray_health >= 3: #GRAY
        WIN.blit(STICKMAN_GRAY_GOLD, (gray.x,gray.y))
