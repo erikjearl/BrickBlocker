@@ -11,16 +11,23 @@ pygame.display.set_caption("BLOCK BLOCKER")
 
 BLACK = (0,0,0)
 PURPLE = (220,208,255)
+BLUE = (150,240,255)
+PINK = (125,0,100)
 
 BORDER_TOP = (640,0, 10, HEIGHT)
 BORDER_SIDE = (0,90,WIDTH,10)
 
 FPS = 60
 NUM_SPAWN = 0
+SCORE = 0
 SPAWN_TIMER = 1100 #ms between spawns
+MAX_SPAWN = 450
 GAME_OVER = False
 
-#hitbox
+GRAY_ALIVE = True
+ORANGE_ALIVE = True
+PINK_ALIVE = True
+
 GRAY_HIT = pygame.USEREVENT + 1
 ORANGE_HIT = pygame.USEREVENT + 2
 PINK_HIT = pygame.USEREVENT + 3
@@ -47,7 +54,9 @@ STICKMAN_X4 = 390
 STICKMAN_X5 = 515
 STICKMAN_Y = 525
 
-BLOCKER = pygame.image.load(os.path.join('Assets','blocker.png'))
+BLOCKER_H3 = pygame.image.load(os.path.join('Assets','blocker.png'))
+BLOCKER_H2 = pygame.image.load(os.path.join('Assets','blocker_h2.png'))
+BLOCKER_H1 = pygame.image.load(os.path.join('Assets','blocker_h1.png'))
 BLOCKER_X = 125
 BLOCKER_Y = 35
 BRICK = pygame.image.load(os.path.join('Assets','brick.png'))
@@ -63,6 +72,43 @@ BOMB_X = 80
 BOMB_Y = 100
 
 FONT = pygame.font.SysFont('Sitka Text', 65)
+FONT_SMALL = pygame.font.SysFont('Sitka Text', 35)
+
+def set_vars():
+    global NUM_SPAWN, SPAWN_TIMER, MAX_SPAWN, GAME_OVER, start, GRAY_ALIVE, ORANGE_ALIVE, PINK_ALIVE
+    NUM_SPAWN = 0
+    SPAWN_TIMER = 1100 #ms between spawns
+    MAX_SPAWN = 450
+    GAME_OVER = False
+    start = False
+    GRAY_ALIVE = True
+    ORANGE_ALIVE = True
+    PINK_ALIVE = True
+
+start = False
+def draw_startMenu():
+    WIN.fill(BLUE)
+    title = FONT.render("Welcome to",55,BLACK) 
+    title2 = FONT.render("BRICK BREAKER",75,PINK) 
+    WIN.blit(title,(205,25))
+    WIN.blit(title2,(125,120))
+    WIN.blit(HEART, (50,15))
+    WIN.blit(HEART, (WIDTH-50-HEART_X,15))
+    WIN.blit(BOMB, (45,420))
+    WIN.blit(BRICK, (35,530))
+    WIN.blit(BOMB, (WIDTH-150,530))
+    WIN.blit(BRICK, (WIDTH-150,400))
+    text = FONT_SMALL.render("Dont let the bricks hit the people! Use the",15,BLACK)
+    text2 = FONT_SMALL.render("arrow keys to move your blocker and space",15,BLACK)
+    text3 = FONT_SMALL.render("bar to speed up movement. Hearts heal you",15,BLACK)
+    text4 = FONT_SMALL.render("and bombs damage your blocker!",15,BLACK)
+    WIN.blit(text,(25,225))
+    WIN.blit(text2,(25,275))
+    WIN.blit(text3,(25,325))
+    WIN.blit(text4,(25,375))
+    text5 = FONT_SMALL.render("Press Space Bar to START",15,PINK)
+    WIN.blit(text5,(170,505))
+    pygame.display.update()
 
 def draw_bg(ending):
     WIN.fill(PURPLE)
@@ -76,12 +122,23 @@ def draw_bg(ending):
     #health_text = FONT.render(str(health), 1, BLACK)
     #WIN.blit(health_text, (560,5))
     title = FONT.render("BRICK BLOCKER",4,BLACK) 
+    score = FONT.render(SCORE,4,BLACK)  #FIX SCORE DISPLAYYsYQ!!!!---------------------------------------
     WIN.blit(title,(10,15))
+    WIN.blit(score,(600,15))
     WIN.blit(HEART, (533,3))
     if GAME_OVER:
         WIN.blit(ending,(50,175))
-    
-#draw and handle game objects
+
+def draw_endMenu():
+    WIN.fill(BLUE)
+    gameover_text = f"GAME OVER at {SCORE}"
+    title = FONT.render(gameover_text,25,BLACK) 
+    title2 = FONT.render("LEADER BOARD:",75,PINK) 
+    WIN.blit(title,(105,25))
+    WIN.blit(title2,(125,120))
+    pygame.display.update()
+
+#object manager
 def draw_window(blocker,gray,orange,pink,bricks,upnext,gray_health,orange_health,pink_health,blocker_health):
     if gray_health >= 3: #GRAY
        WIN.blit(STICKMAN_GRAY_GOLD, (gray.x,gray.y))
@@ -109,15 +166,13 @@ def draw_window(blocker,gray,orange,pink,bricks,upnext,gray_health,orange_health
         pink.x = -150
 
     if blocker_health >= 3: #BLOCKER
-       WIN.blit(BLOCKER, (blocker.x,blocker.y))
+       WIN.blit(BLOCKER_H3, (blocker.x,blocker.y))
     elif blocker_health == 2:
-        WIN.blit(BLOCKER, (blocker.x,blocker.y))
+        WIN.blit(BLOCKER_H2, (blocker.x,blocker.y))
     elif blocker_health == 1:
-        WIN.blit(BLOCKER, (blocker.x,blocker.y))
+        WIN.blit(BLOCKER_H1, (blocker.x,blocker.y))
     else:
         blocker.x = -150
-
-    WIN.blit(BLOCKER, (blocker.x,blocker.y))
 
     for brick in bricks: #DRAW BRICKS
         if brick.width == BRICK_DIM: #check for brick or heart
@@ -193,23 +248,13 @@ def handle_bricks(bricks,blocker,gray,orange,pink):
             elif brick.y > HEIGHT:
                 bricks.remove(brick)
         elif brick.width == BOMB_X: #IF BOMB            
-            if blocker.colliderect(brick): #blocker collide
+            if blocker.colliderect(brick): #blocker collide (doesnt hurt people)
                 pygame.event.post(pygame.event.Event(BLOCKER_HIT))
-                bricks.remove(brick)
-            elif gray.colliderect(brick): #gray heart
-                pygame.event.post(pygame.event.Event(GRAY_HIT))
-                bricks.remove(brick)
-            elif orange.colliderect(brick): #orange heart
-                pygame.event.post(pygame.event.Event(ORANGE_HIT))
-                bricks.remove(brick)
-            elif pink.colliderect(brick): #pink heart
-                pygame.event.post(pygame.event.Event(PINK_HIT))
                 bricks.remove(brick)
             elif brick.y > HEIGHT:
                 bricks.remove(brick)
-        else: #ELSE UNKNOWN FALLING OBJECT ???
-            if brick.y > HEIGHT:
-                bricks.remove(brick)
+        else: #ELSE remove
+            bricks.remove(brick)
 
 
 def blocker_movement(keys_pressed,blocker):
@@ -224,8 +269,9 @@ def blocker_movement(keys_pressed,blocker):
 
 def main():
     global NUM_SPAWN
-    global SPAWN_TIMER
-    global GAME_OVER
+    global SPAWN_TIMER, MAX_SPAWN
+    global GAME_OVER, SCORE
+    global GRAY_ALIVE, ORANGE_ALIVE, PINK_ALIVE
     bricks = []
     gray_health = 2
     orange_health = 2
@@ -262,6 +308,11 @@ def main():
                 if event.key == pygame.K_LSHIFT:
                     brick = pygame.Rect(STICKMAN_X1,90,BOMB_X,BOMB_Y)
                     bricks.append(brick)
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_h:
+                    brick = pygame.Rect(STICKMAN_X1,90,HEART_X,HEART_Y)
+                    bricks.append(brick)
         
             if event.type == GRAY_HIT:
                 gray_health -= 1
@@ -269,26 +320,30 @@ def main():
                 orange_health -= 1
             if event.type == PINK_HIT:
                 pink_health -= 1
-            if event.type == GRAY_HEART:
+            if event.type == GRAY_HEART and gray_health < 3:
                 gray_health += 1
-            if event.type == ORANGE_HEART:
+            if event.type == ORANGE_HEART and orange_health < 3:
                 orange_health += 1
-            if event.type == PINK_HEART:
+            if event.type == PINK_HEART and pink_health < 3:
                 pink_health += 1
             if event.type == BLOCKER_HIT:
                 blocker_health -= 1
+                if blocker_health <=0:
+                    SCORE = NUM_SPAWN
+                    SPAWN_TIMER = 150
+                    
 
         if counter < 0 and not GAME_OVER: #generate bricks on counter
-            rand = random.randrange(5)
-            if rand == 0:
+            rand = random.randrange(10)
+            if rand == 0 or rand == 1:
                 move_stickman(gray,gray,orange,pink)
-            elif rand == 1:
+            elif rand == 2 or rand == 3:
                 move_stickman(orange,gray,orange,pink)
-            elif rand ==2:
+            elif rand == 3 or rand == 4:
                 move_stickman(pink,gray,orange,pink)
-            if rand == 0:
+            if rand == 5:
                 item = pygame.Rect(663,500,HEART_X,HEART_Y)
-            elif rand == 1:
+            elif rand == 6 or rand == 7:
                 item = pygame.Rect(663,500,BOMB_X,BOMB_Y)
             else:
                 item = pygame.Rect(663,500,BRICK_DIM,BRICK_DIM)
@@ -299,7 +354,7 @@ def main():
             upnext[1].y = 300
             upnext[2].y = 450
             NUM_SPAWN += 1
-            if NUM_SPAWN % 10 == 0 and SPAWN_TIMER > 450:
+            if NUM_SPAWN % 10 == 0 and SPAWN_TIMER > MAX_SPAWN:
                 SPAWN_TIMER -=100
                 if SPAWN_TIMER < 700:
                     SPAWN_TIMER += 25
@@ -308,47 +363,71 @@ def main():
                 print(SPAWN_TIMER)
             counter += SPAWN_TIMER
 
-        if gray_health <=0:# right now this breaks the game i think
+        if gray_health <=0 and GRAY_ALIVE:
+            GRAY_ALIVE = False
             SPAWN_TIMER -=150
-        if pink_health <=0:
+            MAX_SPAWN -=50
+        if pink_health <=0 and PINK_ALIVE:
+            PINK_ALIVE = False
             SPAWN_TIMER -=150
-        if orange_health <=0:
+            MAX_SPAWN -=50
+        if orange_health <=0 and ORANGE_ALIVE:
+            ORANGE_ALIVE = False
             SPAWN_TIMER -=150
+            MAX_SPAWN -=50
         ending = ""
-        if gray_health <= 0 and orange_health <= 0 and pink_health <= 0: #GAME OVER
-            gameover_text = f"GAME OVER at {NUM_SPAWN}"
+        if not GRAY_ALIVE and not ORANGE_ALIVE and not PINK_ALIVE: #GAME OVER
+            if blocker_health > 0:
+                SCORE = NUM_SPAWN
+            gameover_text = f"GAME OVER at {SCORE}"
             ending = FONT.render(gameover_text,4,BLACK)
             GAME_OVER = True
+            set_vars()
+            end_menu()
             
-
+        print(SCORE)
         keys_pressed = pygame.key.get_pressed()
         blocker_movement(keys_pressed,blocker)
         handle_bricks(bricks,blocker,gray,orange,pink)
         draw_bg(ending)
         draw_window(blocker,gray,orange,pink,bricks,upnext,gray_health,orange_health,pink_health,blocker_health)
 
-
 def start_menu():
+    global start
+    clock = pygame.time.Clock()
+    while not start:
+        clock.tick(FPS)
+        draw_startMenu()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                start = False
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    print("START")
+                    start = True
     main()
+
+def end_menu():
+    global start, SCORE
+    clock = pygame.time.Clock()
+    while not start:
+        clock.tick(FPS)
+        draw_endMenu()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                start = False
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    print("START")
+                    start = True
+    start = False
+    SCORE = 0
+    start_menu()
 
 if __name__ == "__main__":
     start_menu()
 
 #TD
-#background frame
-#brick spawning
-#add hearts s
-#blocker health
-#stickman moving
-#next up sidebar
-#game over GUI / restart game
-#
-#add hearts to each stickman
-#graphics for full, half, extra heart stickmans
-#stickman chance of teleports at  each brick drop
-
-#leader board- print to txt. file to save 
-
-#MENU GUI
-#ACTUAL END OF GAME HALDING??
-
+#leader board- print to txt. file to save
