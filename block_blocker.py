@@ -10,11 +10,17 @@ WIN = pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption("BLOCK BLOCKER")
 
 BLACK = (0,0,0)
+
 PURPLE = (255,220,240) #main background
 BLUE = (150,240,255) #menu background
 DARK_BLUE = (0,0,255)
 PINK = (150,45,250)
 RED = (225,20,150)
+
+PURPLE = (220,208,255)
+BLUE = (150,240,255)
+PINK = (150,45,250)
+DARK_BLUE = (0,0,255)
 
 BORDER_TOP = (640,0, 10, HEIGHT)
 BORDER_SIDE = (0,90,WIDTH,10)
@@ -123,8 +129,10 @@ def draw_bg(ending):
     pygame.draw.rect(WIN, BLACK, (STICKMAN_X4,635, 110, 5))
     pygame.draw.rect(WIN, BLACK, (STICKMAN_X5,635, 110, 5))
     title = FONT.render("BRICK BLOCKER",4,BLACK) 
+
     score = FONT_SMALL.render(str(NUM_SPAWN),4,RED)
     score2 = FONT_SMALL.render("Score",4,RED) 
+
     WIN.blit(title,(10,15))
     WIN.blit(score2,(660,5))
     WIN.blit(score,(685,45))
