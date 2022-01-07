@@ -12,13 +12,14 @@ pygame.display.set_caption("BLOCK BLOCKER")
 BLACK = (0,0,0)
 PURPLE = (220,208,255)
 BLUE = (150,240,255)
-PINK = (125,0,100)
+PINK = (150,45,250)
+DARK_BLUE = (0,0,255)
 
 BORDER_TOP = (640,0, 10, HEIGHT)
 BORDER_SIDE = (0,90,WIDTH,10)
 
 FPS = 60
-NUM_SPAWN = 0
+NUM_SPAWN = -1
 SCORE = 0
 SPAWN_TIMER = 1100 #ms between spawns
 MAX_SPAWN = 450
@@ -76,7 +77,7 @@ FONT_SMALL = pygame.font.SysFont('Sitka Text', 35)
 
 def set_vars():
     global NUM_SPAWN, SPAWN_TIMER, MAX_SPAWN, GAME_OVER, start, GRAY_ALIVE, ORANGE_ALIVE, PINK_ALIVE
-    NUM_SPAWN = 0
+    NUM_SPAWN = -1
     SPAWN_TIMER = 1100 #ms between spawns
     MAX_SPAWN = 450
     GAME_OVER = False
@@ -119,23 +120,30 @@ def draw_bg(ending):
     pygame.draw.rect(WIN, BLACK, (STICKMAN_X3,635, 110, 5))
     pygame.draw.rect(WIN, BLACK, (STICKMAN_X4,635, 110, 5))
     pygame.draw.rect(WIN, BLACK, (STICKMAN_X5,635, 110, 5))
-    #health_text = FONT.render(str(health), 1, BLACK)
-    #WIN.blit(health_text, (560,5))
     title = FONT.render("BRICK BLOCKER",4,BLACK) 
-    score = FONT.render(SCORE,4,BLACK)  #FIX SCORE DISPLAYYsYQ!!!!---------------------------------------
+    score = FONT_SMALL.render(str(NUM_SPAWN),4,BLACK)
+    score2 = FONT_SMALL.render("Score",4,BLACK) 
     WIN.blit(title,(10,15))
-    WIN.blit(score,(600,15))
+    WIN.blit(score2,(660,5))
+    WIN.blit(score,(685,45))
     WIN.blit(HEART, (533,3))
     if GAME_OVER:
         WIN.blit(ending,(50,175))
 
-def draw_endMenu():
+def draw_endMenu(scores):
     WIN.fill(BLUE)
-    gameover_text = f"GAME OVER at {SCORE}"
-    title = FONT.render(gameover_text,25,BLACK) 
-    title2 = FONT.render("LEADER BOARD:",75,PINK) 
-    WIN.blit(title,(105,25))
-    WIN.blit(title2,(125,120))
+    title = FONT.render("GAME OVER",25,BLACK) 
+    title2 = FONT.render(f"FINAL SCORE: {SCORE}",25,PINK) 
+    title3 = FONT.render("LEADER BOARD",75,DARK_BLUE) 
+    WIN.blit(title,(185,105))
+    WIN.blit(title2,(125,185))
+    WIN.blit(title3,(125,275))
+    score1 = FONT.render("1. " + str(scores[2]),25,DARK_BLUE) 
+    score2 = FONT.render("2. " + str(scores[1]),25,DARK_BLUE) 
+    score3 = FONT.render("3. " + str(scores[0]),25,DARK_BLUE) 
+    WIN.blit(score1,(205,355))
+    WIN.blit(score2,(205,425))
+    WIN.blit(score3,(205,495))
     pygame.display.update()
 
 #object manager
@@ -294,25 +302,15 @@ def main():
                 run = False
                 pygame.QUIT
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LCTRL:
-                    brick = pygame.Rect(STICKMAN_X1,90,BRICK_DIM,BRICK_DIM)
-                    bricks.append(brick)
-            
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RCTRL:
+            if event.type == pygame.KEYDOWN: #CHEATS
+                if event.key == pygame.K_LCTRL: #spawn hearts
                     brick = pygame.Rect(STICKMAN_X1,90,HEART_X,HEART_Y)
                     bricks.append(brick)
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LSHIFT:
-                    brick = pygame.Rect(STICKMAN_X1,90,BOMB_X,BOMB_Y)
-                    bricks.append(brick)
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_h:
-                    brick = pygame.Rect(STICKMAN_X1,90,HEART_X,HEART_Y)
-                    bricks.append(brick)
+                if event.key == pygame.K_ESCAPE: #game over
+                    GAME_OVER = True
+                
+                
         
             if event.type == GRAY_HIT:
                 gray_health -= 1
@@ -376,7 +374,7 @@ def main():
             SPAWN_TIMER -=150
             MAX_SPAWN -=50
         ending = ""
-        if not GRAY_ALIVE and not ORANGE_ALIVE and not PINK_ALIVE: #GAME OVER
+        if not GRAY_ALIVE and not ORANGE_ALIVE and not PINK_ALIVE or GAME_OVER: #GAME OVER
             if blocker_health > 0:
                 SCORE = NUM_SPAWN
             gameover_text = f"GAME OVER at {SCORE}"
@@ -384,8 +382,6 @@ def main():
             GAME_OVER = True
             set_vars()
             end_menu()
-            
-        print(SCORE)
         keys_pressed = pygame.key.get_pressed()
         blocker_movement(keys_pressed,blocker)
         handle_bricks(bricks,blocker,gray,orange,pink)
@@ -404,16 +400,34 @@ def start_menu():
                 pygame.quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    print("START")
                     start = True
     main()
 
 def end_menu():
     global start, SCORE
+    doc = "leaderboard data.txt"
+    try: #update leaderboard data
+        txt = open(doc, "r") #read only
+        scores = txt.read().split('\n')
+        scores = list(map(int, scores))
+        for i in range(len(scores)):
+            if SCORE > scores[i]:
+                scores[i] = SCORE
+                break
+        scores.sort()
+        print(scores)
+        txt = open(doc, "w+") #write override
+        txt.write(str(scores[0]) + "\n")
+        txt.write(str(scores[1]) + "\n")
+        txt.write(str(scores[2]))
+        txt.close()
+    except:
+        print("Document Error")
+
     clock = pygame.time.Clock()
     while not start:
         clock.tick(FPS)
-        draw_endMenu()
+        draw_endMenu(scores)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 start = False
@@ -427,6 +441,7 @@ def end_menu():
     start_menu()
 
 if __name__ == "__main__":
+    print("RUNNING GAME")
     start_menu()
 
 #TD
