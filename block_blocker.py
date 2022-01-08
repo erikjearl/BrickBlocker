@@ -73,7 +73,8 @@ BOMB = pygame.image.load(os.path.join('Assets','bomb.png'))
 BOMB_X = 80
 BOMB_Y = 100
 
-FONT = pygame.font.SysFont('Sitka Text', 65)
+FONT = pygame.font.SysFont('Georgia', 65)
+FONT_MED = pygame.font.SysFont('Sitka Text', 45)
 FONT_SMALL = pygame.font.SysFont('Sitka Text', 35)
 
 def set_vars():
@@ -135,10 +136,17 @@ def draw_bg(ending):
 def draw_endMenu(scores):
     WIN.fill(BLUE)
     title = FONT.render("GAME OVER",25,BLACK) 
+<<<<<<< Updated upstream
     title2 = FONT.render(f"FINAL SCORE: {SCORE}",25,PINK) 
     title3 = FONT.render("LEADER BOARD",75,DARK_BLUE) 
     WIN.blit(title,(185,105))
     WIN.blit(title2,(125,185))
+=======
+    title2 = FONT_MED.render(f"FINAL SCORE: {SCORE}",25,PINK)
+    title3 = FONT.render("LEADER BOARD",75,DARK_BLUE)
+    WIN.blit(title,(185,85))
+    WIN.blit(title2,(200,180))
+>>>>>>> Stashed changes
     WIN.blit(title3,(125,275))
     score1 = FONT.render("1. " + str(scores[2]),25,DARK_BLUE) 
     score2 = FONT.render("2. " + str(scores[1]),25,DARK_BLUE) 
@@ -146,6 +154,15 @@ def draw_endMenu(scores):
     WIN.blit(score1,(205,355))
     WIN.blit(score2,(205,425))
     WIN.blit(score3,(205,495))
+<<<<<<< Updated upstream
+=======
+    WIN.blit(BOMB, (45,105))
+    WIN.blit(BOMB, (640,105))
+    WIN.blit(HEART, (20,400))
+    WIN.blit(HEART, (20,500))
+    WIN.blit(HEART, (650,400))
+    WIN.blit(HEART, (650,500))
+>>>>>>> Stashed changes
     pygame.display.update()
 
 #object manager
@@ -414,13 +431,20 @@ def end_menu():
     try: #update leaderboard data
         txt = open(doc, "r") #read only
         scores = txt.read().split('\n')
+<<<<<<< Updated upstream
         scores = list(map(int, scores))
+=======
+        scores = list(map(int, scores[0:3]))
+>>>>>>> Stashed changes
         for i in range(len(scores)):
             if SCORE > scores[i]:
                 scores[i] = SCORE
                 break
         scores.sort()
+<<<<<<< Updated upstream
         print(scores)
+=======
+>>>>>>> Stashed changes
         txt = open(doc, "w+") #write override
         txt.write(str(scores[0]) + "\n")
         txt.write(str(scores[1]) + "\n")
@@ -439,7 +463,6 @@ def end_menu():
                 pygame.quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    print("START")
                     start = True
     start = False
     SCORE = 0
